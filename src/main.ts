@@ -25,7 +25,7 @@ const num1 = parseFloat(previousInput);
 const num2 = parseFloat(currentInput);
 
 if (operator === '/' && num2 === 0) {
-updateDisplay('Error');
+updateDisplay('エラー');
 currentInput = '';
 previousInput = '';
 operator = '';
@@ -89,8 +89,7 @@ button.addEventListener('click', () => {
     }
 
     // 数字または小数点入力
-    if (value === '.' && currentInput.includes('.')) return;
-
+    if (value !== '.' && currentInput.replace('.', '').length >= 8) return;
     if (currentInput.length >= 8) return;
 
     currentInput += value;
