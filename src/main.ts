@@ -59,7 +59,7 @@ function calculate() {
   }
 
   const formatted = formatResult(result);
-  updateDisplay(formatted);
+  updateDisplay(formatted, '');
   currentInput = formatted;
   previousInput = '';
   operator = '';
@@ -76,7 +76,7 @@ buttons.forEach((button) => {
       previousInput = '';
       operator = '';
       justCleared = true;
-      updateDisplay('0');
+      updateDisplay('0', '');
       return;
     }
 
@@ -107,6 +107,7 @@ buttons.forEach((button) => {
         operator = value;
         previousInput = currentInput;
         currentInput = '';
+        updateDisplay('0', `${previousInput} ${operator}`); 
       }
       return;
     }
@@ -127,6 +128,6 @@ buttons.forEach((button) => {
     if (noDotLength > 8) return;
 
     currentInput += value;
-    updateDisplay(currentInput);
+    updateDisplay(currentInput, previousInput && operator ? `${previousInput} ${operator}` : '');
   });
 });
