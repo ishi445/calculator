@@ -112,16 +112,23 @@ buttons.forEach((button) => {
       return;
     }
 
-    // 小数点入力
-    if (value === '.') {
-      if (!currentInput || currentInput.includes('.') || justCleared) return;
-    }
-
     // justCleared直後に演算子や小数点は無効
     if (justCleared) {
       if (value !== '-' && isNaN(Number(value))) return;
       justCleared = false;
     }
+
+    // 小数点入力
+    if (value === '.') {
+    if (currentInput.includes('.') || justCleared) return;
+    if (!currentInput) {
+    currentInput = '0';
+  }
+  currentInput += '.';
+  updateDisplay(currentInput, previousInput && operator ? `${previousInput} ${operator}` : '');
+  return;
+}
+
 
     // 入力が8桁を超える場合は無視
     const noDotLength = (currentInput + value).replace('.', '').length;
