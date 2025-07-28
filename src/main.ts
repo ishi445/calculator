@@ -1,4 +1,4 @@
-import './style.css'; //これを忘れるとviteは読み込まない
+import './style.css'; // これを忘れると Vite は読み込まない
 
 const formula = document.getElementById('formula') as HTMLDivElement;
 const display = document.getElementById('display') as HTMLDivElement;
@@ -8,7 +8,6 @@ function updateDisplay(main: string, expression: string = '') {
   display.textContent = main;
   formula.textContent = expression;
 }
-
 
 let currentInput = '';
 let previousInput = '';
@@ -22,47 +21,35 @@ function formatResult(result: number): string {
     Math.abs(result) >= 1e8 ||
     (Math.abs(result) < 1e-8 && result !== 0)
   ) {
-    return result.toExponential(7); // 小数点以下7桁の指数表記
+    return result.toExponential(7);
   }
   return resultStr.slice(0, 8);
 }
 
-function calculate() {
+function calculateStep(): string | null {
   const num1 = parseFloat(previousInput);
   const num2 = parseFloat(currentInput);
 
   if (operator === '/' && num2 === 0) {
-    updateDisplay('エラー');
-    console.error('0除算エラー: ', `${num1} / ${num2}`);
+    updateDisplay('エラー', `${previousInput} / ${currentInput}`);
     currentInput = '';
     previousInput = '';
     operator = '';
-    return;
+    return null;
   }
 
   let result: number;
+
   switch (operator) {
-    case '+':
-      result = num1 + num2;
-      break;
-    case '-':
-      result = num1 - num2;
-      break;
-    case '*':
-      result = num1 * num2;
-      break;
-    case '/':
-      result = num1 / num2;
-      break;
-    default:
-      return;
+    case '+': result = num1 + num2; break;
+    case '-': result = num1 - num2; break;
+    case '*': result = num1 * num2; break;
+    case '/': result = num1 / num2; break;
+    default: return null;
   }
 
   const formatted = formatResult(result);
-  updateDisplay(formatted, '');
-  currentInput = formatted;
-  previousInput = '';
-  operator = '';
+  return formatted;
 }
 
 buttons.forEach((button) => {
@@ -80,23 +67,28 @@ buttons.forEach((button) => {
       return;
     }
 
-    // イコール押下
+    // イコール
     if (value === 'equal') {
       if (currentInput && previousInput && operator) {
-        calculate();
+        const result = calculateStep();
+        if (result !== null) {
+          updateDisplay(result, `${previousInput} ${operator} ${currentInput} =`);
+          currentInput = result;
+          previousInput = '';
+          operator = '';
+        }
       }
       return;
     }
 
-    // 演算子 (+ - * /)
+    // 演算子
     if (['+', '-', '*', '/'].includes(value)) {
-      // 入力直後に演算子だけ連打された場合は上書き
       if (!currentInput && previousInput) {
         operator = value;
+        updateDisplay(previousInput, `${previousInput} ${operator}`);
         return;
       }
 
-      // マイナス記号を符号として許可
       if (value === '-' && !currentInput && !previousInput) {
         currentInput = '-';
         updateDisplay(currentInput);
@@ -104,33 +96,37 @@ buttons.forEach((button) => {
       }
 
       if (currentInput) {
+        if (previousInput && operator) {
+          const result = calculateStep();
+          if (result === null) return;
+          previousInput = result;
+        } else {
+          previousInput = currentInput;
+        }
+
         operator = value;
-        previousInput = currentInput;
         currentInput = '';
-        updateDisplay('0', `${previousInput} ${operator}`); 
+        updateDisplay('0', `${previousInput} ${operator}`);
       }
       return;
     }
 
-    // justCleared直後に演算子や小数点は無効
+    // justCleared直後に演算子・小数点は無効
     if (justCleared) {
       if (value !== '-' && isNaN(Number(value))) return;
       justCleared = false;
     }
 
-    // 小数点入力
+    // 小数点
     if (value === '.') {
-    if (currentInput.includes('.') || justCleared) return;
-    if (!currentInput) {
-    currentInput = '0';
-  }
-  currentInput += '.';
-  updateDisplay(currentInput, previousInput && operator ? `${previousInput} ${operator}` : '');
-  return;
-}
+      if (currentInput.includes('.') || justCleared) return;
+      if (!currentInput) currentInput = '0';
+      currentInput += '.';
+      updateDisplay(currentInput, previousInput && operator ? `${previousInput} ${operator}` : '');
+      return;
+    }
 
-
-    // 入力が8桁を超える場合は無視
+    // 8桁制限（小数点は含めない）
     const noDotLength = (currentInput + value).replace('.', '').length;
     if (noDotLength > 8) return;
 
